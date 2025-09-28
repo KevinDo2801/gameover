@@ -9,7 +9,7 @@ import {
   Modality,
   Type,
 } from "@google/genai";
-let baseapi = "http://localhost:3000/api";
+let baseapi = "https://apimoneytalk.onrender.com/";
 
 
 // ----------------- Function Declarations -----------------

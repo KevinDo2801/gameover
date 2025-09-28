@@ -16,7 +16,12 @@ import {
 } from '../types/financial';
 import './FinancialDashboard.css';
 
-const FinancialDashboard: React.FC = () => {
+interface FinancialDashboardProps {
+  onMicrophoneClick?: () => void;
+  isConnected?: boolean;
+}
+
+const FinancialDashboard: React.FC<FinancialDashboardProps> = ({ onMicrophoneClick, isConnected }) => {
   const [activeTab, setActiveTab] = useState<TabType>('expenses');
   const [activeFilter, setActiveFilter] = useState<TimeFilter>('week');
 
@@ -58,7 +63,9 @@ const FinancialDashboard: React.FC = () => {
         
         <ExpenseChart 
           data={currentData.chartData} 
-          total={currentData.total} 
+          total={currentData.total}
+          onMicrophoneClick={onMicrophoneClick}
+          isConnected={isConnected}
         />
         
         <TransactionList categories={currentData.categories} />

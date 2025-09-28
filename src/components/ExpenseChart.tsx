@@ -16,12 +16,16 @@ interface ExpenseChartProps {
   data: ChartData;
   total: number;
   className?: string;
+  onMicrophoneClick?: () => void;
+  isConnected?: boolean;
 }
 
 const ExpenseChart: React.FC<ExpenseChartProps> = ({ 
   data, 
   total, 
-  className = '' 
+  className = '',
+  onMicrophoneClick,
+  isConnected = false
 }) => {
   const formatAmount = (amount: number): string => {
     return new Intl.NumberFormat('en-US', {
@@ -54,13 +58,22 @@ const ExpenseChart: React.FC<ExpenseChartProps> = ({
       <div className="card-container">
         <Doughnut data={data} options={options} />
         <div className="chart-center-text">
-          <div className="voice-chat-icon">
+          <div 
+            className="voice-chat-icon" 
+            onClick={onMicrophoneClick} 
+            style={{ 
+              cursor: 'pointer',
+              filter: isConnected 
+                ? 'drop-shadow(0px 2px 4px rgba(255, 68, 68, 0.3))' 
+                : 'drop-shadow(0px 2px 4px rgba(55, 199, 138, 0.3))'
+            }}
+          >
             <svg width="70" height="70" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 1C13.1 1 14 1.9 14 3V12C14 13.1 13.1 14 12 14C10.9 14 10 13.1 10 12V3C10 1.9 10.9 1 12 1Z" fill="#37C78A"/>
-              <path d="M19 10V12C19 15.9 15.9 19 12 19C8.1 19 5 15.9 5 12V10H7V12C7 14.8 9.2 17 12 17C14.8 17 17 14.8 17 12V10H19Z" fill="#37C78A"/>
-              <path d="M11 22H13V24H11V22Z" fill="#37C78A"/>
-              <path d="M7 22H9V24H7V22Z" fill="#37C78A"/>
-              <path d="M15 22H17V24H15V22Z" fill="#37C78A"/>
+              <path d="M12 1C13.1 1 14 1.9 14 3V12C14 13.1 13.1 14 12 14C10.9 14 10 13.1 10 12V3C10 1.9 10.9 1 12 1Z" fill={isConnected ? "#FF4444" : "#37C78A"}/>
+              <path d="M19 10V12C19 15.9 15.9 19 12 19C8.1 19 5 15.9 5 12V10H7V12C7 14.8 9.2 17 12 17C14.8 17 17 14.8 17 12V10H19Z" fill={isConnected ? "#FF4444" : "#37C78A"}/>
+              <path d="M11 22H13V24H11V22Z" fill={isConnected ? "#FF4444" : "#37C78A"}/>
+              <path d="M7 22H9V24H7V22Z" fill={isConnected ? "#FF4444" : "#37C78A"}/>
+              <path d="M15 22H17V24H15V22Z" fill={isConnected ? "#FF4444" : "#37C78A"}/>
             </svg>
           </div>
           <div className="font-bold">{formatAmount(total)}</div>

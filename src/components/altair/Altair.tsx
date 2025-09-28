@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState, memo } from "react";
 import vegaEmbed from "vega-embed";
 import { useLiveAPIContext } from "../../contexts/LiveAPIContext";
+import { useAuth } from "../../contexts/AuthContext";
+import { getAuthHeaders } from "../../lib/auth-utils";
 import {
   FunctionDeclaration,
   LiveServerToolCall,
@@ -59,40 +61,40 @@ const createTransactionDecl: FunctionDeclaration = {
   },
 };
 
-const updateTransactionDecl: FunctionDeclaration = {
-  name: "update_transaction",
-  description: "Update an existing transaction",
-  parameters: {
-    type: Type.OBJECT,
-    properties: {
-      id: {
-        type: Type.STRING,
-        description: "The ID of the transaction to update",
-      },
-      type: { type: Type.STRING, enum: ["expense", "income"] },
-      category: { type: Type.STRING },
-      amount: { type: Type.NUMBER },
-      note: { type: Type.STRING },
-      date: { type: Type.STRING, description: "YYYY-MM-DD" },
-    },
-    required: ["id"],
-  },
-};
+// const updateTransactionDecl: FunctionDeclaration = {
+//   name: "update_transaction",
+//   description: "Update an existing transaction",
+//   parameters: {
+//     type: Type.OBJECT,
+//     properties: {
+//       id: {
+//         type: Type.STRING,
+//         description: "The ID of the transaction to update",
+//       },
+//       type: { type: Type.STRING, enum: ["expense", "income"] },
+//       category: { type: Type.STRING },
+//       amount: { type: Type.NUMBER },
+//       note: { type: Type.STRING },
+//       date: { type: Type.STRING, description: "YYYY-MM-DD" },
+//     },
+//     required: ["id"],
+//   },
+// };
 
-const deleteTransactionDecl: FunctionDeclaration = {
-  name: "delete_transaction",
-  description: "Delete a transaction by ID",
-  parameters: {
-    type: Type.OBJECT,
-    properties: {
-      id: {
-        type: Type.STRING,
-        description: "ID of the transaction to delete",
-      },
-    },
-    required: ["id"],
-  },
-};
+// const deleteTransactionDecl: FunctionDeclaration = {
+//   name: "delete_transaction",
+//   description: "Delete a transaction by ID",
+//   parameters: {
+//     type: Type.OBJECT,
+//     properties: {
+//       id: {
+//         type: Type.STRING,
+//         description: "ID of the transaction to delete",
+//       },
+//     },
+//     required: ["id"],
+//   },
+// };
 
 // ----------------- Component -----------------
 
@@ -107,6 +109,7 @@ let today = getToday();
 function AltairComponent() {
   const [jsonString, setJSONString] = useState<string>("");
   const { client, setConfig, setModel } = useLiveAPIContext();
+  const { user } = useAuth();
 
   useEffect(() => {
     setModel("models/gemini-2.0-flash-exp");
@@ -118,10 +121,7 @@ function AltairComponent() {
       systemInstruction: {
         parts: [
           {
-            text: `You are my helpful finance assistant. 
-            - If I mention spending/earning money → use create_transaction. 
-            - If I say update/change → call update_transaction. 
-            - If I say delete/remove → call delete_transaction. 
+            text: `You are my helpful finance assistant. If I mention spending/earning money → use create_transaction.  
             Always fill in missing info by asking me first.`,
           },
         ],
@@ -132,8 +132,8 @@ function AltairComponent() {
           functionDeclarations: [
             declaration,
             createTransactionDecl,
-            updateTransactionDecl,
-            deleteTransactionDecl,
+            // updateTransactionDecl,
+            // deleteTransactionDecl,
           ],
         },
       ],
@@ -153,24 +153,33 @@ function AltairComponent() {
               setJSONString(str);
               res = { success: true };
             } else if (fc.name === "create_transaction") {
+              console.log("create_transaction", fc.args);
+              const headers = await getAuthHeaders();
               res = await fetch(`${baseapi}/transactions`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers,
                 body: JSON.stringify(fc.args),
               }).then((r) => r.json());
             } else if (fc.name === "update_transaction") {
+              console.log("update_transaction", fc.args);
+              const headers = await getAuthHeaders();
               res = await fetch(
                 `${baseapi}/transactions/${fc.args?.id}`,
                 fc.args && {
                   method: "PUT",
-                  headers: { "Content-Type": "application/json" },
+                  headers,
                   body: JSON.stringify(fc.args),
                 }
               ).then((r) => r.json());
             } else if (fc.name === "delete_transaction") {
+              console.log("delete_transaction", fc.args);
+              const headers = await getAuthHeaders();
               res = await fetch(
                 `${baseapi}/transactions/${fc.args?.id}`,
-                fc.args && { method: "DELETE" }
+                fc.args && { 
+                  method: "DELETE",
+                  headers
+                }
               ).then((r) => r.json());
             } else {
               res = { success: false, error: "Unknown function" };

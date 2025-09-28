@@ -53,10 +53,23 @@ const ExpenseChart: React.FC<ExpenseChartProps> = ({
     },
   };
 
+  const hasData = data.labels.length > 0 && data.datasets[0].data.length > 0;
+  
+  // Create chart data with gray circle when no data
+  const chartData = hasData ? data : {
+    labels: [''],
+    datasets: [{
+      data: [1],
+      backgroundColor: ['#B7B7B7'],
+      borderWidth: 0,
+      cutout: '70%',
+    }],
+  };
+
   return (
     <div className={`chart-container animate-scale-up ${className}`} style={{ animationDelay: '0.3s' }}>
       <div className="card-container">
-        <Doughnut data={data} options={options} />
+        <Doughnut data={chartData} options={options} />
         <div className="chart-center-text">
           <div 
             className="voice-chat-icon" 

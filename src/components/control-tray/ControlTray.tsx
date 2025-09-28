@@ -22,48 +22,21 @@ import { UseMediaStreamResult } from "../../hooks/use-media-stream-mux";
 import { useScreenCapture } from "../../hooks/use-screen-capture";
 import { useWebcam } from "../../hooks/use-webcam";
 import { AudioRecorder } from "../../lib/audio-recorder";
-import AudioPulse from "../audio-pulse/AudioPulse";
 import "./control-tray.scss";
-import SettingsDialog from "../settings-dialog/SettingsDialog";
 
 export type ControlTrayProps = {
   videoRef: RefObject<HTMLVideoElement>;
   children?: ReactNode;
   supportsVideo: boolean;
   onVideoStreamChange?: (stream: MediaStream | null) => void;
-  enableEditingSettings?: boolean;
 };
 
-type MediaStreamButtonProps = {
-  isStreaming: boolean;
-  onIcon: string;
-  offIcon: string;
-  start: () => Promise<any>;
-  stop: () => any;
-};
-
-/**
- * button used for triggering webcam or screen-capture
- */
-const MediaStreamButton = memo(
-  ({ isStreaming, onIcon, offIcon, start, stop }: MediaStreamButtonProps) =>
-    isStreaming ? (
-      <button className="action-button" onClick={stop}>
-        <span className="material-symbols-outlined">{onIcon}</span>
-      </button>
-    ) : (
-      <button className="action-button" onClick={start}>
-        <span className="material-symbols-outlined">{offIcon}</span>
-      </button>
-    )
-);
 
 function ControlTray({
   videoRef,
   children,
   onVideoStreamChange = () => {},
   supportsVideo,
-  enableEditingSettings,
 }: ControlTrayProps) {
   const videoStreams = [useWebcam(), useScreenCapture()];
   const [activeVideoStream, setActiveVideoStream] =
@@ -71,11 +44,10 @@ function ControlTray({
   const [webcam, screenCapture] = videoStreams;
   const [inVolume, setInVolume] = useState(0);
   const [audioRecorder] = useState(() => new AudioRecorder());
-  const [muted, setMuted] = useState(false);
   const renderCanvasRef = useRef<HTMLCanvasElement>(null);
   const connectButtonRef = useRef<HTMLButtonElement>(null);
 
-  const { client, connected, connect, disconnect, volume } =
+  const { client, connected, connect, disconnect } =
     useLiveAPIContext();
 
   useEffect(() => {
@@ -99,7 +71,7 @@ function ControlTray({
         },
       ]);
     };
-    if (connected && !muted && audioRecorder) {
+    if (connected && audioRecorder) {
       audioRecorder.on("data", onData).on("volume", setInVolume).start();
     } else {
       audioRecorder.stop();
@@ -107,7 +79,7 @@ function ControlTray({
     return () => {
       audioRecorder.off("data", onData).off("volume", setInVolume);
     };
-  }, [connected, client, muted, audioRecorder]);
+  }, [connected, client, audioRecorder]);
 
   useEffect(() => {
     if (videoRef.current) {
@@ -162,42 +134,6 @@ function ControlTray({
   return (
     <section className="control-tray">
       <canvas style={{ display: "none" }} ref={renderCanvasRef} />
-      <nav className={cn("actions-nav", { disabled: !connected })}>
-        <button
-          className={cn("action-button mic-button")}
-          onClick={() => setMuted(!muted)}
-        >
-          {!muted ? (
-            <span className="material-symbols-outlined filled">mic</span>
-          ) : (
-            <span className="material-symbols-outlined filled">mic_off</span>
-          )}
-        </button>
-
-        <div className="action-button no-action outlined">
-          <AudioPulse volume={volume} active={connected} hover={false} />
-        </div>
-
-        {supportsVideo && (
-          <>
-            <MediaStreamButton
-              isStreaming={screenCapture.isStreaming}
-              start={changeStreams(screenCapture)}
-              stop={changeStreams()}
-              onIcon="cancel_presentation"
-              offIcon="present_to_all"
-            />
-            <MediaStreamButton
-              isStreaming={webcam.isStreaming}
-              start={changeStreams(webcam)}
-              stop={changeStreams()}
-              onIcon="videocam_off"
-              offIcon="videocam"
-            />
-          </>
-        )}
-        {children}
-      </nav>
 
       <div className={cn("connection-container", { connected })}>
         <div className="connection-button-container">
@@ -213,7 +149,6 @@ function ControlTray({
         </div>
         <span className="text-indicator">Streaming</span>
       </div>
-      {enableEditingSettings ? <SettingsDialog /> : ""}
     </section>
   );
 }

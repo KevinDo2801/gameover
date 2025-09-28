@@ -35,6 +35,8 @@
   font-size: 14px; /* text-sm = 14px */
   color: #8A8A8A; /* text-muted-foreground */
   margin-top: 8px; /* mt-2 = 8px */
+  margin-bottom: 8px; /* mb-2 = 8px */
+  text-align: center;
 }
 
 /* Fade in animation */

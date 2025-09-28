@@ -16,12 +16,50 @@ const TimeFilterComponent: React.FC<TimeFilterProps> = ({
 }) => {
   const getCurrentDateText = (): string => {
     const now = new Date();
-    const options: Intl.DateTimeFormatOptions = { 
-      weekday: 'long', 
-      month: 'long', 
-      day: 'numeric' 
+    
+    const formatDate = (date: Date): string => {
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${month}/${day}`;
     };
-    return now.toLocaleDateString('en-US', options);
+    
+    switch (activeFilter) {
+      case 'day':
+        const dayOptions: Intl.DateTimeFormatOptions = { 
+          weekday: 'long', 
+          month: 'long', 
+          day: 'numeric' 
+        };
+        return now.toLocaleDateString('en-US', dayOptions);
+        
+      case 'week':
+        const startOfWeek = new Date(now);
+        startOfWeek.setDate(now.getDate() - 6); // Last 7 days including today
+        return `${formatDate(startOfWeek)} - ${formatDate(now)}`;
+        
+      case 'month':
+        const startOfMonth = new Date(now);
+        startOfMonth.setDate(now.getDate() - 29); // Last 30 days including today
+        return `${formatDate(startOfMonth)} - ${formatDate(now)}`;
+        
+      case 'year':
+        return now.getFullYear().toString();
+        
+      case 'period':
+        const periodOptions: Intl.DateTimeFormatOptions = { 
+          month: 'long', 
+          year: 'numeric' 
+        };
+        return now.toLocaleDateString('en-US', periodOptions);
+        
+      default:
+        const defaultOptions: Intl.DateTimeFormatOptions = { 
+          weekday: 'long', 
+          month: 'long', 
+          day: 'numeric' 
+        };
+        return now.toLocaleDateString('en-US', defaultOptions);
+    }
   };
 
   return (
